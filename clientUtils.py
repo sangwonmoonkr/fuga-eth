@@ -15,8 +15,9 @@ DEVICE = torch.device("cpu")
 
 def load_data():
     """Load IMDB data (training and eval)"""
+    seed = random.randint(0, 100)
     raw_datasets = load_dataset("imdb")
-    raw_datasets = raw_datasets.shuffle(seed=42)
+    raw_datasets = raw_datasets.shuffle(seed=seed)
 
     # remove unnecessary data split
     del raw_datasets["unsupervised"]

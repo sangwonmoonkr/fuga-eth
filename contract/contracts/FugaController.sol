@@ -6,8 +6,9 @@ import "./PeerSystem.sol";
 contract FugaController is PeerSystem {
     event ServerMessage(string field, address sender);
     event getConfigMessage(bool self_centered, uint batch_size, string learning_rate, uint local_epochs, uint val_steps);
-    event getClientMessage(string model_hash, uint num_sample, uint score);
-    event FitInsMessage(string[] model_hashes, uint[] num_samples, uint[] scores);
+    event getClientMessage(string model_hash, string[] dweight_hash, uint num_sample, uint score);
+    // event FitInsMessage(string[] model_hashes, string[] dweight_hashes, uint[] num_samples, uint[] scores);
+    event FitInsMessage(string[] dweight_hashes, uint[] num_samples, uint[] scores);
     event EvaluateInsMessage(string[] model_hashes);
 
     enum Status{
@@ -34,6 +35,7 @@ contract FugaController is PeerSystem {
     struct Client {
         Status status;
         string model_hash;
+        string[] dweight_hash;
         uint num_sample;
         uint score;
         uint updateCount;
@@ -55,7 +57,7 @@ contract FugaController is PeerSystem {
 
     function getClient() external {
     // view returns(string memory, uint, uint){
-        emit getClientMessage(client[msg.sender].model_hash, client[msg.sender].num_sample, client[msg.sender].score);
+        emit getClientMessage(client[msg.sender].model_hash, client[msg.sender].dweight_hash, client[msg.sender].num_sample, client[msg.sender].score);
         // return (client[msg.sender].model_hash, client[msg.sender].num_sample, client[msg.sender].score);
     }
 
@@ -82,7 +84,7 @@ contract FugaController is PeerSystem {
         clientRound[msg.sender] = currentRound;
         currentClients.push(msg.sender);
         lastJoinTime = block.timestamp;
-        emit ServerMessage("JoinRound", msg.sender);
+        // emit ServerMessage("JoinRound", msg.sender);
     }
 
     function ConfigRes() external onlyCurrentClients currentStage(Stage.Config) checkStatus(Status.Ready) {
@@ -99,21 +101,26 @@ contract FugaController is PeerSystem {
     function FitIns() external onlyCurrentClients currentStage(Stage.Fit) checkStatus(Status.Config) {
         address[] memory peers = clientPeers[msg.sender];
         uint numPeers = peers.length;
-        string[] memory model_hashes = new string[](numPeers);
+        // string[] memory model_hashes = new string[](numPeers);
+        string[] memory dweight_hashes = new string[](numPeers);
         uint[] memory num_samples = new uint[](numPeers);
         uint[] memory scores = new uint[](numPeers);
         for(uint i=0; i<numPeers; i++) {
-            model_hashes[i] = client[peers[i]].model_hash;
+            // model_hashes[i] = client[peers[i]].model_hash;
+            if(client[peers[i]].updateCount > 0)
+                dweight_hashes[i] = client[peers[i]].dweight_hash[client[peers[i]].updateCount - 1];
             num_samples[i] = client[peers[i]].num_sample;
             scores[i] = client[peers[i]].score;
         }
         client[msg.sender].status = Status.FitIns;
         // return (model_hashes, num_samples, scores);
-        emit FitInsMessage(model_hashes, num_samples, scores);
+        // emit FitInsMessage(model_hashes, dweight_hashes, num_samples, scores);
+        emit FitInsMessage(dweight_hashes, num_samples, scores);
     }
 
-    function FitRes(string memory _model_hash, uint _num_sample) external onlyCurrentClients currentStage(Stage.Fit) checkStatus(Status.FitIns) {
+    function FitRes(string memory _dweight_hash, string memory _model_hash, uint _num_sample) external onlyCurrentClients currentStage(Stage.Fit) checkStatus(Status.FitIns) {
         client[msg.sender].model_hash = _model_hash;
+        client[msg.sender].dweight_hash.push(_dweight_hash);
         client[msg.sender].num_sample = _num_sample;
         client[msg.sender].updateCount++;
         client[msg.sender].status = Status.FitRes;
@@ -210,9 +217,13 @@ contract FugaController is PeerSystem {
     }
 
     function startRound() external onlyCurrentClients {
-        if(lastJoinTime + 20 <= block.timestamp && stage==Stage.Ready) {
+        if(lastJoinTime + 20 - 5 <= block.timestamp && stage==Stage.Ready) {
             stage = Stage.Config;
             emit ServerMessage("ConfigIns", msg.sender);
         }
+    }
+
+    function Test() external {
+        emit ServerMessage("Ready", msg.sender);
     }
 } 

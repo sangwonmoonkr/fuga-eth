@@ -1,9 +1,9 @@
 const FugaController = artifacts.require("FugaController");
 // _maxRound, _self_centered, _FitNum, _EvalNum, _batch_size, _learning_rate, _local_epochs, _val_steps
-const maxRound = 3;
+const maxRound = 5;
 const self_centered = true;
-const FitNum = 1;
-const EvalNum = 1;
+const FitNum = 2;
+const EvalNum = 2;
 const batch_size = 1;
 const learning_rate = "0.00005"
 const local_epochs = 1;

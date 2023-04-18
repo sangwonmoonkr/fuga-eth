@@ -42,7 +42,7 @@
  */
 
 require('dotenv').config();
-const { INFURA_API_KEY, MNEMONIC, MNEMONIC2, ALCHEMY_API_KEY } = process.env;
+const { INFURA_API_KEY, MNEMONIC, ALCHEMY_API_KEY } = process.env;
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 
 module.exports = {
@@ -70,20 +70,6 @@ module.exports = {
       skipDryRun: true, // Skip dry run before migrations? (default: false for public nets )
     },
     mumbai: {
-      provider: () => new HDWalletProvider(MNEMONIC, `https://polygon-mumbai.g.alchemy.com/v2/${ALCHEMY_API_KEY}`),
-      network_id: 80001,
-      confirmations: 2,
-      timeoutBlocks: 200,
-      skipDryRun: true
-    },
-    mumbai2: {
-      provider: () => new HDWalletProvider(MNEMONIC, `https://polygon-mumbai.g.alchemy.com/v2/${ALCHEMY_API_KEY}`),
-      network_id: 80001,
-      confirmations: 2,
-      timeoutBlocks: 200,
-      skipDryRun: true
-    },
-    mumbai3: {
       provider: () => new HDWalletProvider(MNEMONIC, `https://polygon-mumbai.g.alchemy.com/v2/${ALCHEMY_API_KEY}`),
       network_id: 80001,
       confirmations: 2,
